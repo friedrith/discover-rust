@@ -14,6 +14,10 @@ use printer::print_features;
 struct Cli {
     /// The path to the directory to list
     path: std::path::PathBuf,
+
+    /// Output features as JSON
+    #[arg(long)]
+    json: bool,
 }
 
 fn main() -> Result<()> {
@@ -21,11 +25,16 @@ fn main() -> Result<()> {
 
     let features = list_files_recursive(&args.path)?;
 
-    println!("Features found in {}:", args.path.display());
-    if features.is_empty() {
-        println!("No features found.");
+    if args.json {
+        let json = serde_json::to_string_pretty(&features)?;
+        println!("{}", json);
     } else {
-        print_features(&features, 0);
+        println!("Features found in {}:", args.path.display());
+        if features.is_empty() {
+            println!("No features found.");
+        } else {
+            print_features(&features, 0);
+        }
     }
 
     Ok(())
