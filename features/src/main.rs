@@ -7,6 +7,7 @@ mod printer;
 mod readme_parser;
 
 use file_scanner::list_files_recursive;
+use models::Feature;
 use printer::print_features;
 
 /// Recursively list all files in a directory.
@@ -18,6 +19,37 @@ struct Cli {
     /// Output features as JSON
     #[arg(long)]
     json: bool,
+
+    /// Output features as a flat array instead of nested structure
+    #[arg(long)]
+    flat: bool,
+
+    /// Include descriptions in the output
+    #[arg(long)]
+    description: bool,
+}
+
+fn flatten_features(features: &[Feature]) -> Vec<Feature> {
+    let mut flat_features = Vec::new();
+
+    for feature in features {
+        // Create a flattened version of this feature (without nested features)
+        let flat_feature = Feature {
+            name: feature.name.clone(),
+            description: feature.description.clone(),
+            owner: feature.owner.clone(),
+            path: feature.path.clone(),
+            features: Vec::new(), // Empty for flat structure
+        };
+
+        flat_features.push(flat_feature);
+
+        // Recursively flatten nested features
+        let nested_flat = flatten_features(&feature.features);
+        flat_features.extend(nested_flat);
+    }
+
+    flat_features
 }
 
 fn main() -> Result<()> {
@@ -25,15 +57,21 @@ fn main() -> Result<()> {
 
     let features = list_files_recursive(&args.path)?;
 
+    let output_features = if args.flat {
+        flatten_features(&features)
+    } else {
+        features
+    };
+
     if args.json {
-        let json = serde_json::to_string_pretty(&features)?;
+        let json = serde_json::to_string_pretty(&output_features)?;
         println!("{}", json);
     } else {
         println!("Features found in {}:", args.path.display());
-        if features.is_empty() {
+        if output_features.is_empty() {
             println!("No features found.");
         } else {
-            print_features(&features, 0);
+            print_features(&output_features, 0, args.description);
         }
     }
 
