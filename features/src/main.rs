@@ -23,6 +23,19 @@ struct Feature {
     path: String,
 }
 
+fn read_readme_content(content: &String) -> String {
+    let mut description = String::new();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if !trimmed.is_empty() && !trimmed.starts_with('#') {
+            description = trimmed.to_string();
+            break;
+        }
+    }
+
+    return description;
+}
+
 fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
     if !readme_path.exists() {
         return Ok((
@@ -41,7 +54,7 @@ fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
     if content.starts_with("---\n") {
         if let Some(end_pos) = content[4..].find("\n---\n") {
             let yaml_content = &content[4..end_pos + 4];
-            let markdown_content = &content[end_pos + 8..];
+            let markdown_content = content[end_pos + 8..].to_string();
 
             // Parse YAML front matter
             if let Ok(front_matter) = serde_yaml::from_str::<FrontMatter>(yaml_content) {
@@ -50,24 +63,10 @@ fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
                 }
             }
 
-            // Use markdown content as description (first non-empty line)
-            for line in markdown_content.lines() {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() && !trimmed.starts_with('#') {
-                    description = trimmed.to_string();
-                    break;
-                }
-            }
+            description = read_readme_content(&markdown_content)
         }
     } else {
-        // No YAML front matter, use first non-empty line as description
-        for line in content.lines() {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() && !trimmed.starts_with('#') {
-                description = trimmed.to_string();
-                break;
-            }
-        }
+        description = read_readme_content(&content)
     }
 
     Ok((owner, description))
@@ -114,7 +113,7 @@ fn main() -> Result<()> {
     println!("Features:");
     for feature in features {
         println!(
-            "{} - {} -> {}",
+            "{} - {} -> {} {}",
             feature.name, feature.path, feature.owner, feature.description
         );
     }

@@ -1,5 +1,5 @@
 ---
-owner: #team1
+owner: team1
 ---
 
 # Feature 1
