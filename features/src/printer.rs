@@ -1,12 +1,16 @@
 use crate::models::Feature;
+use colored::*;
 
 pub fn print_features(features: &[Feature], indent: usize, show_description: bool) {
     let prefix = "  ".repeat(indent);
 
     for feature in features {
         println!(
-            "{}{} [{}] -> {}",
-            prefix, feature.name, feature.owner, feature.path
+            "{}{} {} -> {}",
+            prefix,
+            feature.name,
+            format!("[{}]", feature.owner).blue(),
+            feature.path.dimmed()
         );
         if show_description {
             println!("{}Description: {}", prefix, feature.description);
