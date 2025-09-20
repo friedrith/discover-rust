@@ -88,7 +88,7 @@ fn main() -> Result<()> {
         } else {
             eprintln!("Unique owners found in {}:", args.path.display());
             for owner in unique_owners {
-                println!("  {}", owner);
+                println!("{}", owner);
             }
         }
     } else {
