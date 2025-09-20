@@ -86,7 +86,7 @@ fn main() -> Result<()> {
             let json = serde_json::to_string_pretty(&unique_owners)?;
             println!("{}", json);
         } else {
-            println!("Unique owners found in {}:", args.path.display());
+            eprintln!("Unique owners found in {}:", args.path.display());
             for owner in unique_owners {
                 println!("  {}", owner);
             }
@@ -102,9 +102,9 @@ fn main() -> Result<()> {
             let json = serde_json::to_string_pretty(&output_features)?;
             println!("{}", json);
         } else {
-            println!("Features found in {}:", args.path.display());
+            eprintln!("Features found in {}:", args.path.display());
             if output_features.is_empty() {
-                println!("No features found.");
+                eprintln!("No features found.");
             } else {
                 print_features(&output_features, 0, args.description);
             }

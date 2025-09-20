@@ -8,7 +8,7 @@ pub fn print_features(features: &[Feature], indent: usize, show_description: boo
         println!(
             "{}{} {} -> {}",
             prefix,
-            feature.name,
+            feature.name.bold(),
             format!("[{}]", feature.owner).blue(),
             feature.path.dimmed()
         );
