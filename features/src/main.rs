@@ -31,7 +31,7 @@ struct Cli {
 
     /// Display only unique list of owners
     #[arg(long)]
-    owners: bool,
+    list_owners: bool,
 }
 
 fn flatten_features(features: &[Feature]) -> Vec<Feature> {
@@ -79,7 +79,7 @@ fn main() -> Result<()> {
 
     let features = list_files_recursive(&args.path)?;
 
-    if args.owners {
+    if args.list_owners {
         let unique_owners = extract_unique_owners(&features);
 
         if args.json {
