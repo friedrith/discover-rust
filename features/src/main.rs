@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use std::collections::HashSet;
 
 mod file_scanner;
 mod models;
@@ -27,6 +28,10 @@ struct Cli {
     /// Include descriptions in the output
     #[arg(long)]
     description: bool,
+
+    /// Display only unique list of owners
+    #[arg(long)]
+    owners: bool,
 }
 
 fn flatten_features(features: &[Feature]) -> Vec<Feature> {
@@ -52,26 +57,57 @@ fn flatten_features(features: &[Feature]) -> Vec<Feature> {
     flat_features
 }
 
+fn extract_unique_owners(features: &[Feature]) -> Vec<String> {
+    let mut owners_set = HashSet::new();
+
+    fn collect_owners(features: &[Feature], owners_set: &mut HashSet<String>) {
+        for feature in features {
+            owners_set.insert(feature.owner.clone());
+            collect_owners(&feature.features, owners_set);
+        }
+    }
+
+    collect_owners(features, &mut owners_set);
+
+    let mut owners: Vec<String> = owners_set.into_iter().collect();
+    owners.sort(); // Sort alphabetically
+    owners
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
     let features = list_files_recursive(&args.path)?;
 
-    let output_features = if args.flat {
-        flatten_features(&features)
-    } else {
-        features
-    };
+    if args.owners {
+        let unique_owners = extract_unique_owners(&features);
 
-    if args.json {
-        let json = serde_json::to_string_pretty(&output_features)?;
-        println!("{}", json);
-    } else {
-        println!("Features found in {}:", args.path.display());
-        if output_features.is_empty() {
-            println!("No features found.");
+        if args.json {
+            let json = serde_json::to_string_pretty(&unique_owners)?;
+            println!("{}", json);
         } else {
-            print_features(&output_features, 0, args.description);
+            println!("Unique owners found in {}:", args.path.display());
+            for owner in unique_owners {
+                println!("  {}", owner);
+            }
+        }
+    } else {
+        let output_features = if args.flat {
+            flatten_features(&features)
+        } else {
+            features
+        };
+
+        if args.json {
+            let json = serde_json::to_string_pretty(&output_features)?;
+            println!("{}", json);
+        } else {
+            println!("Features found in {}:", args.path.display());
+            if output_features.is_empty() {
+                println!("No features found.");
+            } else {
+                print_features(&output_features, 0, args.description);
+            }
         }
     }
 
