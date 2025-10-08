@@ -5,10 +5,22 @@ pub fn print_features(features: &[Feature], indent: usize, show_description: boo
     let prefix = "  ".repeat(indent);
 
     for feature in features {
+        let is_deprecated = feature
+            .meta
+            .get("deprecated")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let feature_name = if is_deprecated {
+            feature.name.truecolor(255, 165, 0).bold()
+        } else {
+            feature.name.bold()
+        };
+
         println!(
             "{}{} {} -> {}",
             prefix,
-            feature.name.bold(),
+            feature_name,
             format!("[{}]", feature.owner).blue(),
             feature.path.dimmed()
         );

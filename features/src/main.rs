@@ -2,11 +2,13 @@ use anyhow::Result;
 use clap::Parser;
 use std::collections::HashSet;
 
+mod checker;
 mod file_scanner;
 mod models;
 mod printer;
 mod readme_parser;
 
+use checker::run_checks;
 use file_scanner::list_files_recursive;
 use models::Feature;
 use printer::print_features;
@@ -32,6 +34,10 @@ struct Cli {
     /// Display only unique list of owners
     #[arg(long)]
     list_owners: bool,
+
+    /// Run checks on features (e.g., duplicate names)
+    #[arg(long)]
+    check: bool,
 }
 
 fn flatten_features(features: &[Feature]) -> Vec<Feature> {
@@ -80,7 +86,9 @@ fn main() -> Result<()> {
 
     let features = list_files_recursive(&args.path)?;
 
-    if args.list_owners {
+    if args.check {
+        run_checks(&features)?;
+    } else if args.list_owners {
         let unique_owners = extract_unique_owners(&features);
 
         if args.json {
