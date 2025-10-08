@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-
-use crate::models::FrontMatter;
 
 fn read_readme_content(content: &String) -> String {
     let mut description = String::new();
@@ -17,11 +16,14 @@ fn read_readme_content(content: &String) -> String {
     return description;
 }
 
-pub fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
+pub fn read_readme_info(
+    readme_path: &Path,
+) -> Result<(String, String, HashMap<String, serde_json::Value>)> {
     if !readme_path.exists() {
         return Ok((
             "Unknown".to_string(),
             "No description available".to_string(),
+            HashMap::new(),
         ));
     }
 
@@ -30,6 +32,7 @@ pub fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
 
     let mut owner = "Unknown".to_string();
     let mut description = "No description available".to_string();
+    let mut meta: HashMap<String, serde_json::Value> = HashMap::new();
 
     // Check if content starts with YAML front matter (---)
     if content.starts_with("---\n") {
@@ -38,9 +41,22 @@ pub fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
             let markdown_content = content[end_pos + 8..].to_string();
 
             // Parse YAML front matter
-            if let Ok(front_matter) = serde_yaml::from_str::<FrontMatter>(yaml_content) {
-                if let Some(owner_value) = front_matter.owner {
-                    owner = owner_value;
+            if let Ok(yaml_value) = serde_yaml::from_str::<serde_yaml::Value>(yaml_content) {
+                if let Some(mapping) = yaml_value.as_mapping() {
+                    for (key, value) in mapping {
+                        if let Some(key_str) = key.as_str() {
+                            if key_str == "owner" {
+                                if let Some(owner_value) = value.as_str() {
+                                    owner = owner_value.to_string();
+                                }
+                            } else {
+                                // Convert YAML value to JSON value for meta
+                                if let Ok(json_value) = serde_json::to_value(value) {
+                                    meta.insert(key_str.to_string(), json_value);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -50,5 +66,5 @@ pub fn read_readme_info(readme_path: &Path) -> Result<(String, String)> {
         description = read_readme_content(&content)
     }
 
-    Ok((owner, description))
+    Ok((owner, description, meta))
 }

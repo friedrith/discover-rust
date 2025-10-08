@@ -1,9 +1,4 @@
-use serde::Deserialize;
-
-#[derive(Debug, Deserialize)]
-pub struct FrontMatter {
-    pub owner: Option<String>,
-}
+use std::collections::HashMap;
 
 #[derive(Debug, serde::Serialize)]
 pub struct Feature {
@@ -12,4 +7,5 @@ pub struct Feature {
     pub owner: String,
     pub path: String,
     pub features: Vec<Feature>,
+    pub meta: HashMap<String, serde_json::Value>,
 }

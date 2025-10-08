@@ -19,7 +19,7 @@ pub fn list_files_recursive(dir: &Path) -> Result<Vec<Feature>> {
         if path.is_dir() {
             if dir.ends_with("features") {
                 let readme_path = path.join("README.md");
-                let (owner, description) = read_readme_info(&readme_path)?;
+                let (owner, description, meta) = read_readme_info(&readme_path)?;
 
                 let new_features = list_files_recursive(&path);
 
@@ -29,6 +29,7 @@ pub fn list_files_recursive(dir: &Path) -> Result<Vec<Feature>> {
                     owner,
                     path: path.to_string_lossy().to_string(),
                     features: new_features?,
+                    meta,
                 });
             } else {
                 let new_features = list_files_recursive(&path);

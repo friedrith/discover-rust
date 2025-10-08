@@ -45,6 +45,7 @@ fn flatten_features(features: &[Feature]) -> Vec<Feature> {
             owner: feature.owner.clone(),
             path: feature.path.clone(),
             features: Vec::new(), // Empty for flat structure
+            meta: feature.meta.clone(),
         };
 
         flat_features.push(flat_feature);
